@@ -325,7 +325,7 @@ def parse_args(argv):
       "--num_filters", type=int, default=192,
       help="Number of filters per layer.")
   train_cmd.add_argument(
-      "--train_path", default="/tmp/train_bmshj2018",
+      "--train_path", default="../experiments/bmshj2018-autoencoder",
       help="Path where to log training metrics for TensorBoard and back up "
            "intermediate model checkpoints.")
   train_cmd.add_argument(

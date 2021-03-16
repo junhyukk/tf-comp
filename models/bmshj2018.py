@@ -451,7 +451,7 @@ def parse_args(argv):
       "--scale_max", type=float, default=256.,
       help="Maximum value of standard deviation of Gaussians.")
   train_cmd.add_argument(
-      "--train_path", default="/tmp/train_bmshj2018",
+      "--train_path", default="../experiments/train_bmshj2018",
       help="Path where to log training metrics for TensorBoard and back up "
            "intermediate model checkpoints.")
   train_cmd.add_argument(
