@@ -152,12 +152,8 @@ class BMSHJ2018Model(tf.keras.Model):
     self.hyper_analysis_transform = HyperAnalysisTransform(num_filters)
     self.hyper_synthesis_transform = HyperSynthesisTransform(num_filters)
     self.hyperprior = tfc.NoisyDeepFactorized(batch_shape=(num_filters,))
-
-
     self.encoder = tf.keras.models.load_model(encoder_path)
     self.decoder = tf.keras.models.load_model(decoder_path)
-    self.re_encoder = tf.keras.models.load_model(encoder_path)
-    self.re_encoder.trainable = False
     self.build((None, None, None, 3))
 
   def call(self, x, training):
@@ -180,10 +176,6 @@ class BMSHJ2018Model(tf.keras.Model):
     bpp = (tf.reduce_sum(bits) + tf.reduce_sum(side_bits)) / num_pixels
     # Mean squared error across pixels.
     mse = tf.reduce_mean(tf.math.squared_difference(x, x_hat))
-    # Feature-wise loss funtion.
-    x_feat = self.re_encoder(x, training=False)
-    x_hat_feat = self.re_encoder(x_hat, training=False)
-    mse_feat = tf.reduce_mean(tf.math.squared_difference(x_feat, x_hat_feat))
     # The rate-distortion Lagrangian.
     loss = bpp + self.lmbda * mse + mse_feat
     return loss, bpp, mse, mse_feat
@@ -418,13 +410,13 @@ def parse_args(argv):
       "--verbose", "-V", action="store_true",
       help="Report progress and metrics when training or compressing.")
   parser.add_argument(
-      "--model_path", default="bmshj2018-perceptual",
+      "--model_path", default="bmshj2018-finetune",
       help="Path where to save/load the trained model.")
   parser.add_argument(
-      "--encoder_path", default="encoder",
+      "--encoder_path", default="../pretrained/encoder-l1",
       help="Path where to save/load the trained model.")
   parser.add_argument(
-      "--decoder_path", default="decoder",
+      "--decoder_path", default="../pretrained/decoder-l1",
       help="Path where to save/load the trained model.")
   subparsers = parser.add_subparsers(
       title="commands", dest="command",
@@ -470,7 +462,7 @@ def parse_args(argv):
       "--scale_max", type=float, default=256.,
       help="Maximum value of standard deviation of Gaussians.")
   train_cmd.add_argument(
-      "--train_path", default="../experiments/bmshj2018-perceptual",
+      "--train_path", default="../experiments/bmshj2018-finetune",
       help="Path where to log training metrics for TensorBoard and back up "
            "intermediate model checkpoints.")
   train_cmd.add_argument(
