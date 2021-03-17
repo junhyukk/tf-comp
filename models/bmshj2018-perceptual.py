@@ -181,8 +181,8 @@ class BMSHJ2018Model(tf.keras.Model):
     # Mean squared error across pixels.
     mse = tf.reduce_mean(tf.math.squared_difference(x, x_hat))
     # Feature-wise loss funtion.
-    x_feat = self.re_encoder(x)
-    x_hat_feat = self.re_encoder(x_hat)
+    x_feat = self.re_encoder(x, training=False)
+    x_hat_feat = self.re_encoder(x_hat, training=False)
     mse_feat = tf.reduce_mean(tf.math.squared_difference(x_feat, x_hat_feat))
     # The rate-distortion Lagrangian.
     loss = bpp + self.lmbda * mse + mse_feat
