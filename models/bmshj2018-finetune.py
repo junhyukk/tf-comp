@@ -177,28 +177,26 @@ class BMSHJ2018Model(tf.keras.Model):
     # Mean squared error across pixels.
     mse = tf.reduce_mean(tf.math.squared_difference(x, x_hat))
     # The rate-distortion Lagrangian.
-    loss = bpp + self.lmbda * mse + mse_feat
-    return loss, bpp, mse, mse_feat
+    loss = bpp + self.lmbda * mse
+    return loss, bpp, mse
 
   def train_step(self, x):
     with tf.GradientTape() as tape:
-      loss, bpp, mse, mse_feat = self(x, training=True)
+      loss, bpp, mse = self(x, training=True)
     variables = self.trainable_variables
     gradients = tape.gradient(loss, variables)
     self.optimizer.apply_gradients(zip(gradients, variables))
     self.loss.update_state(loss)
     self.bpp.update_state(bpp)
     self.mse.update_state(mse)
-    self.mse_feat.update_state(mse_feat)
-    return {m.name: m.result() for m in [self.loss, self.bpp, self.mse, self.mse_feat]}
+    return {m.name: m.result() for m in [self.loss, self.bpp, self.mse]}
 
   def test_step(self, x):
-    loss, bpp, mse, mse_feat = self(x, training=False)
+    loss, bpp, mse = self(x, training=False)
     self.loss.update_state(loss)
     self.bpp.update_state(bpp)
     self.mse.update_state(mse)
-    self.mse_feat.update_state(mse_feat)
-    return {m.name: m.result() for m in [self.loss, self.bpp, self.mse, self.mse_feat]}
+    return {m.name: m.result() for m in [self.loss, self.bpp, self.mse]}
 
   def predict_step(self, x):
     raise NotImplementedError("Prediction API is not supported.")
@@ -214,7 +212,6 @@ class BMSHJ2018Model(tf.keras.Model):
     self.loss = tf.keras.metrics.Mean(name="loss")
     self.bpp = tf.keras.metrics.Mean(name="bpp")
     self.mse = tf.keras.metrics.Mean(name="mse")
-    self.mse_feat = tf.keras.metrics.Mean(name="mse_feat")
 
   def fit(self, *args, **kwargs):
     retval = super().fit(*args, **kwargs)
