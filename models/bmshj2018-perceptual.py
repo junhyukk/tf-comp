@@ -139,9 +139,10 @@ class HyperSynthesisTransform(tf.keras.Sequential):
 class BMSHJ2018Model(tf.keras.Model):
   """Main model class."""
 
-  def __init__(self, lmbda, num_filters, num_scales, scale_min, scale_max, encoder_path, decoder_path):
+  def __init__(self, lmbda, lmbda2, num_filters, num_scales, scale_min, scale_max, encoder_path, decoder_path):
     super().__init__()
     self.lmbda = lmbda
+    self.lmbda2 = lmbda2
     self.num_scales = num_scales
     offset = tf.math.log(scale_min)
     factor = (tf.math.log(scale_max) - tf.math.log(scale_min)) / (
@@ -185,7 +186,7 @@ class BMSHJ2018Model(tf.keras.Model):
     x_hat_feat = self.re_encoder(x_hat, training=False)
     mse_feat = tf.reduce_mean(tf.math.squared_difference(x_feat, x_hat_feat))
     # The rate-distortion Lagrangian.
-    loss = bpp + self.lmbda * mse + mse_feat
+    loss = bpp + self.lmbda * mse + self.lmbda2 * mse_feat
     return loss, bpp, mse, mse_feat
 
   def train_step(self, x):
@@ -323,7 +324,7 @@ def train(args):
     tf.debugging.enable_check_numerics()
 
   model = BMSHJ2018Model(
-      args.lmbda, args.num_filters, args.num_scales, args.scale_min,
+      args.lmbda, args.lmbda2, args.num_filters, args.num_scales, args.scale_min,
       args.scale_max, args.encoder_path, args.decoder_path)
   model.compile(
       optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
@@ -452,6 +453,9 @@ def parse_args(argv):
   train_cmd.add_argument(
       "--lambda", type=float, default=0.01, dest="lmbda",
       help="Lambda for rate-distortion tradeoff.")
+  train_cmd.add_argument(
+      "--lambda2", type=float, default=1.0, dest="lmbda2",
+      help="Lambda2 for rate-distortion tradeoff.")
   train_cmd.add_argument(
       "--train_glob", type=str, default=None,
       help="Glob pattern identifying custom training data. This pattern must "
